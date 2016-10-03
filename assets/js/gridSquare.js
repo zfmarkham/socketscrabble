@@ -25,6 +25,36 @@ GridSquare.COLOURS = {
     TRIPLE_WORD:    0xED3237
 };
 
+// TODO: Move this into Tile, also surely there's a better way?
+GridSquare.LETTER_VALUES = {
+    A: 1,
+    B: 3,
+    C: 3,
+    D: 2,
+    E: 1,
+    F: 4,
+    G: 2,
+    H: 4,
+    I: 1,
+    J: 8,
+    K: 5,
+    L: 1,
+    M: 3,
+    N: 1,
+    O: 1,
+    P: 3,
+    Q: 10,
+    R: 1,
+    S: 1,
+    T: 1,
+    U: 1,
+    V: 4,
+    W: 4,
+    X: 8,
+    Y: 4,
+    Z: 10
+};
+
 function GridSquare(position, type)
 {
     PIXI.Container.call(this);
@@ -70,19 +100,34 @@ function GridSquare(position, type)
 
 GridSquare.prototype.setLetter = function(value)
 {
-    if (this.letter)
+    if (this.tile)
     {
-        this.removeChild(this.letter);
+        this.removeChild(this.tile);
     }
+
+    this.tile = new PIXI.Graphics();
+    this.tile.beginFill(0xF3D998, 1);
+    this.tile.lineStyle(2, 0x000000, 1);
+    this.tile.drawRoundedRect(0, 0, GridSquare.SIZE, GridSquare.SIZE, 4);
+    this.tile.endFill();
 
     this.letter = new PIXI.Text(
         value,
-        {font: "32px sans-serif", fill: "white", align: 'center'}
+        {fontFamily: "sans-serif", fontSize: 32, fill: 0x052A05}
     );
 
-    this.letter.position.set((this.width - this.letter.width) / 2, (this.height - this.letter.height) / 2);
+    this.value = new PIXI.Text(
+        GridSquare.LETTER_VALUES[value],
+        {fontFamily: "sans-serif", fontSize: 14, fontWeight: 'bold', fill: 0x052A05}
+    );
 
-    this.addChild(this.letter);
+    var valuePadding = 2;
+    this.letter.position.set((this.width - this.letter.width) / 2, (this.height - this.letter.height) / 2);
+    this.value.position.set(this.width - this.value.width - valuePadding, this.height - this.value.height - valuePadding);
+
+    this.tile.addChild(this.letter);
+    this.tile.addChild(this.value);
+    this.addChild(this.tile);
 };
 
 GridSquare.prototype.onKeyDown = function(key)
@@ -90,6 +135,6 @@ GridSquare.prototype.onKeyDown = function(key)
     key.preventDefault();
     if (key.keyCode >= 65 && key.keyCode <= 90)
     {
-        this.setLetter(String.fromCharCode(key.keyCode));
+        this.setLetter(String.fromCharCode(key.keyCode).toUpperCase());
     }
 };
