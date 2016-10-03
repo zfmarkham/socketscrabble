@@ -9,7 +9,12 @@ Grid.GRID_COLUMNS   = 15;
 Grid.prototype = Object.create(PIXI.Container.prototype);
 Grid.prototype.constructor = Grid;
 
-function Grid() {
+Grid.SPECIAL_TILES = [
+    
+];
+
+function Grid()
+{
     PIXI.Container.call(this);
     this.position.x = 50;
     this.position.y = 50;
@@ -25,7 +30,8 @@ function Grid() {
     this.createTiles();
 }
 
-Grid.prototype.createTiles = function() {
+Grid.prototype.createTiles = function()
+{
     for (var i = 0; i < Grid.GRID_ROWS; i++)
     {
         for (var j = 0; j < Grid.GRID_COLUMNS; j++)

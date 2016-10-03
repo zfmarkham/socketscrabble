@@ -10,19 +10,17 @@ renderer.view.style.display = "block";
 renderer.autoResize = true;
 renderer.resize(window.innerWidth, window.innerHeight);
 
-// var tile = new Tile();
-//
-// stage.addChild(tile);
-
 createGrid();
 update();
 
-function createGrid() {
+function createGrid()
+{
     this.grid = new Grid();
     stage.addChild(this.grid);
 }
 
-function update() {
+function update()
+{
     requestAnimationFrame(update);
     renderer.render(stage);
 }
