@@ -1,0 +1,22 @@
+{
+  "name": "socketscrabble-master",
+  "version": "1.0.0",
+  "description": "socketscrabble clientside",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zfmarkham/socketscrabble.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zfmarkham/socketscrabble/issues"
+  },
+  "homepage": "https://github.com/zfmarkham/socketscrabble#readme",
+  "devDependencies": {
+    "browser-sync": "^2.17.0"
+  }
+}
