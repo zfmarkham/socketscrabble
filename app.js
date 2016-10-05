@@ -45,7 +45,7 @@ server.listen(port, function () {
  * @param {URL}
  * @param {HTTP handler}
  */
-controller.onGet("/", function (request, response) {
+controller.onGet("/play", function (request, response) {
     if(! _wsServerStarted){
         gameController.init(server);
     }
@@ -56,7 +56,7 @@ controller.onGet("/", function (request, response) {
  * @param {URL}
  * @param {HTTP handler}
  */
-controller.onGet("/menu/", function (request, response) {
+controller.onGet("/menu", function (request, response) {
     response.writeHead(200, { contentType: "text/plain" });
     response.end("world");
 });
