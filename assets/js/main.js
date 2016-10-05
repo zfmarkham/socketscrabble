@@ -24,3 +24,8 @@ function update()
     requestAnimationFrame(update);
     renderer.render(stage);
 }
+
+
+window.addEventListener("resize", function () {
+    renderer.resize(window.innerWidth, window.innerHeight);
+});
