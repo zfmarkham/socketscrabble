@@ -1,12 +1,10 @@
 var renderer = PIXI.autoDetectRenderer(256, 256);
 
 document.body.appendChild(renderer.view);
+renderer.view.classList += "ss-Canvas";
 
 var stage = new PIXI.Container();
 
-// TODO move this into CSS
-renderer.view.style.position = "absolute";
-renderer.view.style.display = "block";
 renderer.autoResize = true;
 renderer.resize(window.innerWidth, window.innerHeight);
 

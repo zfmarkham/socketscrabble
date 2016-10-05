@@ -1,6 +1,10 @@
+body {
+    margin: 0;
+}
 
-/*TODO use a proper selector*/
-*{
+.ss-Canvas {
+    display: block;
+    position: absolute;
     padding: 0;
     margin: 0;
 }
