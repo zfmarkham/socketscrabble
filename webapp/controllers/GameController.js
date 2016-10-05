@@ -1,3 +1,6 @@
+"use strict";
+
+//imports
 const io = require("socket.io");
 
 
@@ -44,15 +47,15 @@ let _nextRoomId = 1;
  * @param {httpServer}
  */
 const init = function (httpServer) {
-    this._wsServer = io.listen(httpServer);
+    _wsServer = io.listen(httpServer);
 
-    this._wsServer.on("connection", function (socket) {
+    _wsServer.on("connection", function (socket) {
 
-        socket.on("disconnect", this._onDisconnectHandler);
-        socket.on("newGame", this._onNewGameHandler);
-        socket.on("joinGame", this._onJoinGameHandler);
+        socket.on("disconnect", _onDisconnectHandler);
+        socket.on("newGame", _onNewGameHandler);
+        socket.on("joinGame", _onJoinGameHandler);
 
-        this._activeSockets.push(socket);
+        _activeSockets.push(socket);
     });
 };
 
@@ -70,8 +73,8 @@ const _onDisconnectHandler = function (data) {
     socket.leave(roomId);
 
     //remove activeSocket.
-    const index = this._activeSockets.indexOf(socket);
-    if (index !== -1) this._activeSockets.splice(index, 1);
+    const index = _activeSockets.indexOf(socket);
+    if (index !== -1) _activeSockets.splice(index, 1);
 };
 
 /**
@@ -81,7 +84,7 @@ const _onDisconnectHandler = function (data) {
 const _onNewGameHandler = function () {
     console.log("newGame handler fired.");
 
-    const roomId = this._createNewRoom(socket.id)
+    const roomId = _createNewRoom(socket.id)
     socket.join(roomId);
 
     //Socket on client side should have a reference to its new room id.
@@ -100,9 +103,9 @@ const _onJoinGameHandler = function (data) {
     const userId = socket.id;
     const roomId = data && data.roomId || null;
 
-    if (userId && roomId && roomId in this._roomDataLookUp && roomId in this._roomUserLookUp) {
-        this._roomUserLookUp[roomId].push(userId);
-        gameData = this._roomDataLookUp[roomId];
+    if (userId && roomId && roomId in _roomDataLookUp && roomId in _roomUserLookUp) {
+        _roomUserLookUp[roomId].push(userId);
+        gameData = _roomDataLookUp[roomId];
         socket.join(roomId);
         roomJoined = true;
     }
@@ -127,12 +130,12 @@ const _onJoinGameHandler = function (data) {
  * @returns {number} room Id
  */
 const _createNewRoom = function (userId) {
-    const roomId = this._nextRoomId;
+    const roomId = _nextRoomId;
 
-    this._roomDataLookUp[roomId] = {};
-    this._roomUserLookUp[roomId] = [userId];
+    _roomDataLookUp[roomId] = {};
+    _roomUserLookUp[roomId] = [userId];
 
-    this._nextRoomId++;
+    _nextRoomId++;
     return roomId;
 }
 

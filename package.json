@@ -17,7 +17,8 @@
   },
   "homepage": "https://github.com/zfmarkham/socketscrabble#readme",
   "devDependencies": {
-    "browser-sync": "^2.17.0"
+    "browser-sync": "^2.17.0",
+    "devtool": "^2.2.0"
   },
   "dependencies": {
     "httpdispatcher": "^1.0.0",

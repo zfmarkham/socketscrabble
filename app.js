@@ -1,3 +1,5 @@
+"use strict";
+
 /** Imports */
 const http = require("http");
 const controller = require("httpdispatcher");
@@ -6,6 +8,10 @@ const config = require("./webapp/config.json");
 
 
 const port = config && config.defaultPort || 3000;
+
+
+let _wsServerStarted = false;
+
 
 /**
  * Server instance.  Delegates URL handling to http dispatcher;
@@ -40,17 +46,9 @@ server.listen(port, function () {
  * @param {HTTP handler}
  */
 controller.onGet("/", function (request, response) {
-
-});
-
-
-/**
- * HTTP endpoint for in-game requests
- * @param {URL}
- * @param {HTTP handler}
- */
-controller.onGet("/play/", function (request, response) {
-    gameController.onGet(request, response);
+    if(! _wsServerStarted){
+        gameController.init(server);
+    }
 });
 
 
