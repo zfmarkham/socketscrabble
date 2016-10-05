@@ -2,6 +2,7 @@
 
 //imports
 const io = require("socket.io");
+const Game = require("../dto/Game");
 
 
 /**
@@ -22,23 +23,14 @@ const _activeSockets = [];
  * @key roomId
  * @value gameData
  */
-const _roomDataLookUp = {};
-
-/**
- * @PlaceHolder - do this with active games?
- * Map of existing rooms & active users 
- * @private
- * @key roomId
- * @value array of user ids
- */
-const _roomUserLookUp = {};
+const _games = {};
 
 /**
  * @Placeholder - required DB.
  * Used to ensure next room id is unique.
  * @private
  */
-let _nextRoomId = 1;
+let _nextGameId = 1;
 
 
 /**
@@ -84,7 +76,7 @@ const _onDisconnectHandler = function (data) {
 const _onNewGameHandler = function () {
     console.log("newGame handler fired.");
 
-    const roomId = _createNewRoom(socket.id)
+    const roomId = _createNewGame(socket.id)
     socket.join(roomId);
 
     //Socket on client side should have a reference to its new room id.
@@ -98,28 +90,25 @@ const _onNewGameHandler = function () {
  * @param {json} hopefully contains roomId
  */
 const _onJoinGameHandler = function (data) {
-    let gameData;
-    let roomJoined = false;
     const userId = socket.id;
-    const roomId = data && data.roomId || null;
+    const gameId = data && data.gameId || null;
+    let game = null;
 
-    if (userId && roomId && roomId in _roomDataLookUp && roomId in _roomUserLookUp) {
-        _roomUserLookUp[roomId].push(userId);
-        gameData = _roomDataLookUp[roomId];
-        socket.join(roomId);
-        roomJoined = true;
-    }
-
-    if (!roomJoined) {
+    if (!userId || !gameId || !(gameId in _games)) {
         //@TODO need error handling. 
         socket.emit("joinFailed");
-
-    } else {
-        //Send existing data back to newly joined client.
-        socket.emit("joinSuccess", gameData);
-        //inform other users new player has joined.
-        socket.broadcast.to(roomId).emit("newPlayer"); //@TODO send user data to other clients.
+        return;
     }
+
+    game = _games[gameId];
+    game.addNewPlayer(userId);
+
+    //join game room.    
+    socket.join(gameId);
+    //Send existing data back to newly joined client.
+    socket.emit("joinSuccess", game);
+    //inform other users new player has joined.
+    socket.broadcast.to(roomId).emit("newPlayer"); //@TODO send user data to other clients.
 };
 
 /**
@@ -129,14 +118,14 @@ const _onJoinGameHandler = function (data) {
  * @param {number} user Id of the player creating the room.
  * @returns {number} room Id
  */
-const _createNewRoom = function (userId) {
-    const roomId = _nextRoomId;
+const _createNewGame = function (userId) {
+    const game  = new Game(_nextGameId);
 
-    _roomDataLookUp[roomId] = {};
-    _roomUserLookUp[roomId] = [userId];
+    _nextGameId++;
 
-    _nextRoomId++;
-    return roomId;
+    game.addNewPlayer(userId);
+    
+    return game;
 }
 
 
