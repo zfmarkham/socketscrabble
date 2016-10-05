@@ -16,7 +16,9 @@ update();
 function createGrid()
 {
     this.grid = new Grid();
+    this.rack = new Rack();
     stage.addChild(this.grid);
+    stage.addChild(this.rack);
 }
 
 function update()

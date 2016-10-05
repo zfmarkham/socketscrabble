@@ -1,0 +1,71 @@
+/**
+ * Created by zmark_000 on 04/10/2016.
+ */
+
+Rack.prototype = Object.create(PIXI.Container.prototype);
+Rack.prototype.constructor = Rack;
+
+function Rack()
+{
+    PIXI.Container.call(this);
+
+    this.position.set(200, (Grid.GRID_COLUMNS * GridSquare.SIZE) + 80);
+
+    // Basic low level drawing, this would probably end up being an image, if not then make consts for values
+    let rackGfx = new PIXI.Graphics();
+    rackGfx.beginFill(0x06413D, 1);
+    rackGfx.drawRoundedRect(0, 0, 9 * GridSquare.SIZE, GridSquare.SIZE * 1.5, 10);
+    rackGfx.drawRect(0, 10, 9 * GridSquare.SIZE, GridSquare.SIZE * 1.5 - 10);
+    rackGfx.endFill();
+    rackGfx.beginFill(0x08564E, 1);
+    rackGfx.drawRoundedRect(0, 10, 20, GridSquare.SIZE, 6);
+    rackGfx.drawRect(0, 20, 20, GridSquare.SIZE * 1.5 - 20);
+    rackGfx.drawRoundedRect(9 * GridSquare.SIZE - 20, 10, 20, GridSquare.SIZE, 6);
+    rackGfx.drawRect(9 * GridSquare.SIZE - 20, 20, 20, GridSquare.SIZE * 1.5 - 20);
+    rackGfx.drawRect(0, GridSquare.SIZE * 1.5 - 30, 9 * GridSquare.SIZE, 30);
+    rackGfx.endFill();
+
+    this.addChild(rackGfx);
+
+    //this.addLetters("LETTERS".split(""));
+    this.bag = new Bag();
+    this.addLetters(this.bag.getLetters(7));
+}
+
+Rack.prototype.addLetters = function(letters)
+{
+    let pos = {x: 35, y: -5};
+
+    while (letters.length)
+    {
+        let char = letters.shift().toUpperCase();
+
+        let tile = new PIXI.Graphics();
+        tile.beginFill(0xF3D998, 1);
+        tile.lineStyle(2, 0x000000, 1);
+        tile.drawRoundedRect(0, 0, GridSquare.SIZE, GridSquare.SIZE, 4);
+        tile.endFill();
+
+        let letter = new PIXI.Text(
+            char,
+            {fontFamily: "sans-serif", fontSize: 32, fill: 0x052A05}
+        );
+
+        let value = new PIXI.Text(
+            GridSquare.LETTER_VALUES[char],
+            {fontFamily: "sans-serif", fontSize: 14, fontWeight: 'bold', fill: 0x052A05}
+        );
+
+        let valuePadding = 2;
+        letter.position.set((tile.width - letter.width) / 2, (tile.height - letter.height) / 2);
+        value.position.set(tile.width - value.width - valuePadding, tile.height - value.height - valuePadding);
+
+        tile.addChild(letter);
+        tile.addChild(value);
+
+        tile.position.set(pos.x, pos.y);
+        pos.x += GridSquare.SIZE + 5;
+
+        this.addChild(tile);
+    }
+};
