@@ -27,7 +27,6 @@ function Rack()
 
     this.addChild(rackGfx);
 
-    //this.addLetters("LETTERS".split(""));
     this.bag = new Bag();
     this.addLetters(this.bag.getLetters(7));
 }
@@ -39,33 +38,9 @@ Rack.prototype.addLetters = function(letters)
     while (letters.length)
     {
         let char = letters.shift().toUpperCase();
-
-        let tile = new PIXI.Graphics();
-        tile.beginFill(0xF3D998, 1);
-        tile.lineStyle(2, 0x000000, 1);
-        tile.drawRoundedRect(0, 0, GridSquare.SIZE, GridSquare.SIZE, 4);
-        tile.endFill();
-
-        let letter = new PIXI.Text(
-            char,
-            {fontFamily: "sans-serif", fontSize: 32, fill: 0x052A05}
-        );
-
-        let value = new PIXI.Text(
-            GridSquare.LETTER_VALUES[char],
-            {fontFamily: "sans-serif", fontSize: 14, fontWeight: 'bold', fill: 0x052A05}
-        );
-
-        let valuePadding = 2;
-        letter.position.set((tile.width - letter.width) / 2, (tile.height - letter.height) / 2);
-        value.position.set(tile.width - value.width - valuePadding, tile.height - value.height - valuePadding);
-
-        tile.addChild(letter);
-        tile.addChild(value);
-
+        let tile = new Tile(char);
         tile.position.set(pos.x, pos.y);
         pos.x += GridSquare.SIZE + 5;
-
         this.addChild(tile);
     }
 };
