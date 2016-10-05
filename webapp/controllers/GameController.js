@@ -85,7 +85,7 @@ const _onNewGameHandler = function () {
     socket.join(roomId);
 
     //Socket on client side should have a reference to its new room id.
-    socket.broadcast.emit("newGame", { "roomId": roomId });
+    socket.broadcast.emit("newGame");
 
 }
 
@@ -114,7 +114,7 @@ const _onJoinGameHandler = function (data) {
     } else {
         //Send existing data back to newly joined client.
         socket.emit("joinSuccess", gameData);
-        //inform other uses new player has joined.
+        //inform other users new player has joined.
         socket.broadcast.to(roomId).emit("newPlayer"); //@TODO send user data to other clients.
     }
 };
