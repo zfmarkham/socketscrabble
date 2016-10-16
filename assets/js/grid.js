@@ -7,6 +7,7 @@ Grid.prototype.constructor = Grid;
 
 Grid.GRID_ROWS      = 15;
 Grid.GRID_COLUMNS   = 15;
+Grid.BORDER_WIDTH   = 20;
 
 Grid.SPECIAL_SQUARE_COORDS = [
     // MIDDLE
@@ -90,17 +91,25 @@ function Grid()
 
     var gfx = new PIXI.Graphics();
     gfx.beginFill(0xCCCCCC, 1);
-    gfx.lineStyle(20, 0xFFFFFF, 1);
+    gfx.lineStyle(Grid.BORDER_WIDTH, 0xFFFFFF, 1);
     gfx.drawRect(0, 0, Grid.GRID_COLUMNS * GridSquare.SIZE, Grid.GRID_ROWS * GridSquare.SIZE);
     gfx.endFill();
 
     this.addChild(gfx);
 
     this.createGridSquares();
+
+    this.rack = this.addChild(new Rack());
+
+    this.interactive = true;
+    this.mousedown = this.touchstart = this.onMouseDown;
+    this.mouseup = this.touchend = this.onMouseRelease;
 }
 
 Grid.prototype.createGridSquares = function()
 {
+    this.gridSquares = [];
+
     for (var i = 0; i < Grid.GRID_ROWS; i++)
     {
         for (var j = 0; j < Grid.GRID_COLUMNS; j++)
@@ -108,6 +117,45 @@ Grid.prototype.createGridSquares = function()
             var gridSquareType = Grid.SPECIAL_SQUARE_COORDS.filter(function(e){return e.x == i && e.y == j})[0];
             var gridSquare = new GridSquare({x: j * GridSquare.SIZE, y: i * GridSquare.SIZE}, gridSquareType ? gridSquareType.type : undefined);
             this.addChild(gridSquare);
+            this.gridSquares.push(gridSquare);
         }
+    }
+};
+
+Grid.prototype.onMouseRelease = function(mousedata)
+{
+    let tile = this.rack.getCurrentTile();
+
+    if (tile)
+    {
+        tile.dragging = false;
+        let  pos = mousedata.data.getLocalPosition(this.parent);
+        let  gridSquare = this.gridSquares.filter(function(el) {
+            let local = el.toLocal(pos);
+            return el.hitArea.contains(local.x, local.y);
+        })[0];
+
+        if (gridSquare)
+        {
+            tile.setParent(gridSquare);
+            tile.position.x = 0;
+            tile.position.y = 0;
+        }
+        else
+        {
+            // Player released the tile off the board
+            // TODO return tile to rack or to previous board location?
+        }
+    }
+};
+
+Grid.prototype.onMouseDown = function(mousedata)
+{
+    let tile = this.rack.getCurrentTile();
+
+    if (tile && tile.parent != this.rack)
+    {
+        tile.setParent(this.rack);
+        tile.onMouseMove(mousedata);
     }
 };

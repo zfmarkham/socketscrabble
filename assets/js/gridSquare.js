@@ -38,10 +38,10 @@ function GridSquare(position, type)
     this.back.drawRect(0, 0, GridSquare.SIZE, GridSquare.SIZE);
     this.back.endFill();
 
-    this.back.interactive = true;
-    this.back.hitArea = new PIXI.Rectangle(0, 0, GridSquare.SIZE, GridSquare.SIZE);
+    this.interactive = true;
+    this.hitArea = new PIXI.Rectangle(0, 0, GridSquare.SIZE, GridSquare.SIZE);
 
-    this.back.mouseover = function()
+    this.mouseover = function()
     {
         this.highlight = new PIXI.Graphics();
         this.highlight.beginFill(0xFFFFFF, 0.4);
@@ -50,7 +50,7 @@ function GridSquare(position, type)
         this.addChild(this.highlight);
     }.bind(this);
 
-    this.back.mouseout = function()
+    this.mouseout = function()
     {
         if (this.highlight)
         {
@@ -60,10 +60,3 @@ function GridSquare(position, type)
     
     this.addChild(this.back);
 }
-
-GridSquare.prototype.addTile = function(tile)
-{
-    this.tile = tile;
-    
-    this.addChild(this.tile);
-};
