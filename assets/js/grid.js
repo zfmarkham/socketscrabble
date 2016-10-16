@@ -130,10 +130,12 @@ Grid.prototype.onMouseRelease = function(mousedata)
     {
         tile.dragging = false;
         let  pos = mousedata.data.getLocalPosition(this.parent);
-        let  gridSquare = this.gridSquares.filter(function(el) {
+
+        // Check to see if mouse coords fall within a gridSquare
+        let  gridSquare = this.gridSquares.find(function(el) {
             let local = el.toLocal(pos);
             return el.hitArea.contains(local.x, local.y);
-        })[0];
+        });
 
         if (gridSquare)
         {
@@ -153,6 +155,8 @@ Grid.prototype.onMouseDown = function(mousedata)
 {
     let tile = this.rack.getCurrentTile();
 
+    // Make the rack the parent object to the Tile again, otherwise layering issues occur with grid squares that were spawned
+    // after the one the Tile is currently attached to.
     if (tile && tile.parent != this.rack)
     {
         tile.setParent(this.rack);
