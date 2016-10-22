@@ -25,9 +25,10 @@ GridSquare.COLOURS = {
     TRIPLE_WORD:    0xED3237
 };
 
-function GridSquare(position, type)
+function GridSquare(id, position, type)
 {
     PIXI.Container.call(this);
+    this.id = id;
     this.position = position;
 
     this.type = type || GridSquare.TYPES.BLANK;

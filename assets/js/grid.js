@@ -83,6 +83,8 @@ Grid.SPECIAL_SQUARE_COORDS = [
 
 ];
 
+const socket = io.connect('http://localhost:3000');
+
 function Grid()
 {
     PIXI.Container.call(this);
@@ -104,6 +106,23 @@ function Grid()
     this.interactive = true;
     this.mousedown = this.touchstart = this.onMouseDown;
     this.mouseup = this.touchend = this.onMouseRelease;
+
+    this.submitWordBtn = this.addChild(new PIXI.Container());
+    this.submitWordBtn.setTransform(this.rack.x + this.rack.width + 10, this.rack.y + (this.rack.height / 2));
+    this.submitWordBtn.gfx = new PIXI.Graphics();
+    this.submitWordBtn.gfx.beginFill(0xCCCCCC, 1);
+    this.submitWordBtn.gfx.drawRoundedRect(0, 0, 150, this.rack.height / 2, 4);
+    this.submitWordBtn.gfx.endFill();
+    this.submitWordBtn.addChild(this.submitWordBtn.gfx);
+    this.submitWordBtn.interactive = true;
+    this.submitWordBtn.buttonMode = true;
+    this.submitWordBtn.addChild(new PIXI.Text("SUBMIT WORD", {fill: 'red', fontSize: '20px'}));
+    this.submitWordBtn.on("click", this.onSubmitWordPressed);
+    
+    socket.on('letterPlaced', function(data){
+        let tile = new Tile(data.letter);
+        this.gridSquares.find(el=>el.id == data.gridSquareId).addChild(tile);
+    }.bind(this))
 }
 
 Grid.prototype.createGridSquares = function()
@@ -115,7 +134,7 @@ Grid.prototype.createGridSquares = function()
         for (var j = 0; j < Grid.GRID_COLUMNS; j++)
         {
             var gridSquareType = Grid.SPECIAL_SQUARE_COORDS.filter(function(e){return e.x == i && e.y == j})[0];
-            var gridSquare = new GridSquare({x: j * GridSquare.SIZE, y: i * GridSquare.SIZE}, gridSquareType ? gridSquareType.type : undefined);
+            var gridSquare = new GridSquare(i * Grid.GRID_COLUMNS + j, {x: j * GridSquare.SIZE, y: i * GridSquare.SIZE}, gridSquareType ? gridSquareType.type : undefined);
             this.addChild(gridSquare);
             this.gridSquares.push(gridSquare);
         }
@@ -128,6 +147,9 @@ Grid.prototype.onMouseRelease = function(mousedata)
 
     if (tile)
     {
+
+        // TODO Make sure the gridSquare to be placed on isn't already occupied
+
         tile.dragging = false;
         let  pos = mousedata.data.getLocalPosition(this.parent);
 
@@ -139,9 +161,11 @@ Grid.prototype.onMouseRelease = function(mousedata)
 
         if (gridSquare)
         {
+            // Attach Tile to grid square
             tile.setParent(gridSquare);
             tile.position.x = 0;
             tile.position.y = 0;
+            socket.emit('letterPlaced', {letter: tile.letter, globalPos: tile.toGlobal(tile.position), gridSquareId: gridSquare.id});
         }
         else
         {
@@ -162,4 +186,10 @@ Grid.prototype.onMouseDown = function(mousedata)
         tile.setParent(this.rack);
         tile.onMouseMove(mousedata);
     }
+};
+
+Grid.prototype.onSubmitWordPressed = function(mousedata)
+{
+    // TODO Make sure all letters exist on same row or column. Diags not allowed
+    // Calculate what the word is by going left to right or top to bottom
 };

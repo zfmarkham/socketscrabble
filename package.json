@@ -21,7 +21,7 @@
     "devtool": "^2.2.0"
   },
   "dependencies": {
-    "httpdispatcher": "^1.0.0",
+    "express": "^4.14.0",
     "socket.io": "^1.4.8"
   }
 }

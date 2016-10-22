@@ -1,7 +1,6 @@
 "use strict";
 
 //imports
-const io = require("socket.io");
 const Game = require("../dto/Game");
 
 
@@ -38,15 +37,17 @@ let _nextGameId = 1;
  * Requires HTTP Request server to upgrade clients to ws-protcol. 
  * @param {httpServer}
  */
-const init = function (httpServer) {
-    _wsServer = io.listen(httpServer);
-
-    _wsServer.on("connection", function (socket) {
+const init = function (io) {
+    //_wsServer = io.listen(httpServer);
+    io.on('connection', function (socket) {
 
         socket.on("disconnect", _onDisconnectHandler);
         socket.on("newGame", _onNewGameHandler);
         socket.on("joinGame", _onJoinGameHandler);
-
+        socket.on('letterPlaced', function(data){
+            socket.broadcast.emit('letterPlaced', data);
+        });
+        
         _activeSockets.push(socket);
     });
 };
@@ -87,7 +88,7 @@ const _onNewGameHandler = function () {
 /**
  * @Placeholder (?)
  * 
- * @param {json} hopefully contains roomId
+ * @param {json} data - hopefully contains roomId
  */
 const _onJoinGameHandler = function (data) {
     const userId = socket.id;
