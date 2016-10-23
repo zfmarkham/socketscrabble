@@ -5,7 +5,9 @@ const http = require("http");
 const controller = require("httpdispatcher");
 const gameController = require("./webapp/controllers/GameController");
 const config = require("./webapp/config.json");
+const nodeStatic =  require("node-static");
 
+const fileServer = new nodeStatic.Server("./test/");
 
 const port = config && config.defaultPort || 3000;
 
@@ -25,8 +27,6 @@ const server = http.createServer(function (request, response) {
     } catch (error) {
         console.error(error);
         response.writeHead(500);
-
-    } finally {
         response.end();
     }
 });
@@ -46,9 +46,11 @@ server.listen(port, function () {
  * @param {HTTP handler}
  */
 controller.onGet("/play", function (request, response) {
-    if(! _wsServerStarted){
+    if (!_wsServerStarted) {
         gameController.init(server);
     }
+
+    response.end();
 });
 
 
