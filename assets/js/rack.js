@@ -9,7 +9,7 @@ function Rack()
 {
     PIXI.Container.call(this);
 
-    this.position.set(200, (Grid.GRID_COLUMNS * GridSquare.SIZE) + 80);
+    this.position.set(150, (Grid.GRID_COLUMNS * GridSquare.SIZE) + 30);
 
     // Basic low level drawing, this would probably end up being an image, if not then make consts for values
     let rackGfx = new PIXI.Graphics();
@@ -26,6 +26,7 @@ function Rack()
     rackGfx.endFill();
 
     this.addChild(rackGfx);
+    this.tiles = [];
 
     this.bag = new Bag();
     this.addLetters(this.bag.getLetters(7));
@@ -42,5 +43,11 @@ Rack.prototype.addLetters = function(letters)
         tile.position.set(pos.x, pos.y);
         pos.x += GridSquare.SIZE + 5;
         this.addChild(tile);
+        this.tiles.push(tile);
     }
+};
+
+Rack.prototype.getCurrentTile = function()
+{
+    return this.tiles.filter(tile=>tile.dragging)[0];
 };

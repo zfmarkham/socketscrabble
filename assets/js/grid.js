@@ -7,6 +7,7 @@ Grid.prototype.constructor = Grid;
 
 Grid.GRID_ROWS      = 15;
 Grid.GRID_COLUMNS   = 15;
+Grid.BORDER_WIDTH   = 20;
 
 Grid.SPECIAL_SQUARE_COORDS = [
     // MIDDLE
@@ -82,6 +83,8 @@ Grid.SPECIAL_SQUARE_COORDS = [
 
 ];
 
+const socket = io.connect('http://zfmarkham.servehttp.com:3000');
+
 function Grid()
 {
     PIXI.Container.call(this);
@@ -90,24 +93,103 @@ function Grid()
 
     var gfx = new PIXI.Graphics();
     gfx.beginFill(0xCCCCCC, 1);
-    gfx.lineStyle(20, 0xFFFFFF, 1);
+    gfx.lineStyle(Grid.BORDER_WIDTH, 0xFFFFFF, 1);
     gfx.drawRect(0, 0, Grid.GRID_COLUMNS * GridSquare.SIZE, Grid.GRID_ROWS * GridSquare.SIZE);
     gfx.endFill();
 
     this.addChild(gfx);
 
     this.createGridSquares();
+
+    this.rack = this.addChild(new Rack());
+
+    this.interactive = true;
+    this.mousedown = this.touchstart = this.onMouseDown;
+    this.mouseup = this.touchend = this.onMouseRelease;
+
+    this.submitWordBtn = this.addChild(new PIXI.Container());
+    this.submitWordBtn.setTransform(this.rack.x + this.rack.width + 10, this.rack.y + (this.rack.height / 2));
+    this.submitWordBtn.gfx = new PIXI.Graphics();
+    this.submitWordBtn.gfx.beginFill(0xCCCCCC, 1);
+    this.submitWordBtn.gfx.drawRoundedRect(0, 0, 150, this.rack.height / 2, 4);
+    this.submitWordBtn.gfx.endFill();
+    this.submitWordBtn.addChild(this.submitWordBtn.gfx);
+    this.submitWordBtn.interactive = true;
+    this.submitWordBtn.buttonMode = true;
+    this.submitWordBtn.addChild(new PIXI.Text("SUBMIT WORD", {fill: 'red', fontSize: '20px'}));
+    this.submitWordBtn.on("click", this.onSubmitWordPressed);
+    
+    socket.on('letterPlaced', function(data){
+        let tile = new Tile(data.letter);
+        this.gridSquares.find(el=>el.id == data.gridSquareId).addChild(tile);
+    }.bind(this))
 }
 
 Grid.prototype.createGridSquares = function()
 {
+    this.gridSquares = [];
+
     for (var i = 0; i < Grid.GRID_ROWS; i++)
     {
         for (var j = 0; j < Grid.GRID_COLUMNS; j++)
         {
             var gridSquareType = Grid.SPECIAL_SQUARE_COORDS.filter(function(e){return e.x == i && e.y == j})[0];
-            var gridSquare = new GridSquare({x: j * GridSquare.SIZE, y: i * GridSquare.SIZE}, gridSquareType ? gridSquareType.type : undefined);
+            var gridSquare = new GridSquare(i * Grid.GRID_COLUMNS + j, {x: j * GridSquare.SIZE, y: i * GridSquare.SIZE}, gridSquareType ? gridSquareType.type : undefined);
             this.addChild(gridSquare);
+            this.gridSquares.push(gridSquare);
         }
     }
+};
+
+Grid.prototype.onMouseRelease = function(mousedata)
+{
+    let tile = this.rack.getCurrentTile();
+
+    if (tile)
+    {
+
+        // TODO Make sure the gridSquare to be placed on isn't already occupied
+
+        tile.dragging = false;
+        let  pos = mousedata.data.getLocalPosition(this.parent);
+
+        // Check to see if mouse coords fall within a gridSquare
+        let  gridSquare = this.gridSquares.find(function(el) {
+            let local = el.toLocal(pos);
+            return el.hitArea.contains(local.x, local.y);
+        });
+
+        if (gridSquare)
+        {
+            // Attach Tile to grid square
+            tile.setParent(gridSquare);
+            tile.position.x = 0;
+            tile.position.y = 0;
+            socket.emit('letterPlaced', {letter: tile.letter, globalPos: tile.toGlobal(tile.position), gridSquareId: gridSquare.id});
+        }
+        else
+        {
+            // Player released the tile off the board
+            // TODO return tile to rack or to previous board location?
+        }
+    }
+};
+
+Grid.prototype.onMouseDown = function(mousedata)
+{
+    let tile = this.rack.getCurrentTile();
+
+    // Make the rack the parent object to the Tile again, otherwise layering issues occur with grid squares that were spawned
+    // after the one the Tile is currently attached to.
+    if (tile && tile.parent != this.rack)
+    {
+        tile.setParent(this.rack);
+        tile.onMouseMove(mousedata);
+    }
+};
+
+Grid.prototype.onSubmitWordPressed = function(mousedata)
+{
+    // TODO Make sure all letters exist on same row or column. Diags not allowed
+    // Calculate what the word is by going left to right or top to bottom
 };

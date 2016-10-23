@@ -84,7 +84,8 @@ Tile.prototype.startDrag = function(mouseData)
 
 Tile.prototype.stopDrag = function(mouseData)
 {
-    this.dragging = false;
+    var pos = mouseData.data.getLocalPosition(this.parent);
+    this.position.set(pos.x - this.dragOffset.x, pos.y - this.dragOffset.y);
 };
 
 Tile.prototype.onMouseMove = function(mouseData)
