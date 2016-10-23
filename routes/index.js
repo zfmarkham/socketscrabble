@@ -11,7 +11,7 @@ module.exports = function(io) {
 
     router.get('/', function (req, res) {
         gameController.init(io);
-        res.sendfile(path.resolve(__dirname + '/../resources/index.html'));
+        res.sendfile(path.resolve(__dirname + '/../index.html'));
     });
 
     return router;

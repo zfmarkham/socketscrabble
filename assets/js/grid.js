@@ -83,7 +83,7 @@ Grid.SPECIAL_SQUARE_COORDS = [
 
 ];
 
-const socket = io.connect('http://localhost:3000');
+const socket = io.connect('http://zfmarkham.servehttp.com:3000');
 
 function Grid()
 {
