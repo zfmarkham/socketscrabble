@@ -117,12 +117,14 @@ function Grid()
     this.submitWordBtn.interactive = true;
     this.submitWordBtn.buttonMode = true;
     this.submitWordBtn.addChild(new PIXI.Text("SUBMIT WORD", {fill: 'red', fontSize: '20px'}));
-    this.submitWordBtn.on("click", this.onSubmitWordPressed);
+    this.submitWordBtn.on("click", this.onSubmitWordPressed.bind(this));
     
     socket.on('letterPlaced', function(data){
         let tile = new Tile(data.letter);
         this.gridSquares.find(el=>el.id == data.gridSquareId).addChild(tile);
-    }.bind(this))
+    }.bind(this));
+
+    this.placedTiles = [];
 }
 
 Grid.prototype.createGridSquares = function()
@@ -134,7 +136,7 @@ Grid.prototype.createGridSquares = function()
         for (var j = 0; j < Grid.GRID_COLUMNS; j++)
         {
             var gridSquareType = Grid.SPECIAL_SQUARE_COORDS.filter(function(e){return e.x == i && e.y == j})[0];
-            var gridSquare = new GridSquare(i * Grid.GRID_COLUMNS + j, {x: j * GridSquare.SIZE, y: i * GridSquare.SIZE}, gridSquareType ? gridSquareType.type : undefined);
+            var gridSquare = new GridSquare(i, j, i * Grid.GRID_COLUMNS + j, {x: j * GridSquare.SIZE, y: i * GridSquare.SIZE}, gridSquareType ? gridSquareType.type : undefined);
             this.addChild(gridSquare);
             this.gridSquares.push(gridSquare);
         }
@@ -161,17 +163,18 @@ Grid.prototype.onMouseRelease = function(mousedata)
 
         if (gridSquare)
         {
-            // Attach Tile to grid square
-            tile.setParent(gridSquare);
-            tile.position.x = 0;
-            tile.position.y = 0;
-            socket.emit('letterPlaced', {letter: tile.letter, globalPos: tile.toGlobal(tile.position), gridSquareId: gridSquare.id});
+            if (gridSquare.children.length == 1)
+            {
+                // Attach Tile to grid square
+                tile.setParent(gridSquare);
+                socket.emit('letterPlaced', {letter: tile.letter, globalPos: tile.toGlobal(tile.position), gridSquareId: gridSquare.id});
+                this.placedTiles.push(tile);
+            }
         }
-        else
-        {
-            // Player released the tile off the board
-            // TODO return tile to rack or to previous board location?
-        }
+
+        // If mouse if released outside of board or on an occupied gridSquare, then setting position to 0,0 will be 0,0 on the rack placeholder
+        // it was already attached to. If it has been released on an unoccupied gridSquare then 0,0 will refer to 0,0 of the gridSquare
+        tile.position.set(0, 0);
     }
 };
 
@@ -181,15 +184,23 @@ Grid.prototype.onMouseDown = function(mousedata)
 
     // Make the rack the parent object to the Tile again, otherwise layering issues occur with grid squares that were spawned
     // after the one the Tile is currently attached to.
-    if (tile && tile.parent != this.rack)
+    if (tile && !this.rack.children.includes(tile.parent))
     {
-        tile.setParent(this.rack);
+        tile.setParent(this.rack.getAvailablePlaceholder());
         tile.onMouseMove(mousedata);
     }
 };
 
 Grid.prototype.onSubmitWordPressed = function(mousedata)
 {
-    // TODO Make sure all letters exist on same row or column. Diags not allowed
-    // Calculate what the word is by going left to right or top to bottom
+    // Make sure all tile are on either the same row or same column
+    // If one of these yields undefined, then we can assume all tiles are on same plane for that test
+    var tilesOnSameRow = this.placedTiles.find((e, i, a) => e.parent.row != a[0].parent.row);
+    var tilesOnSameCol = this.placedTiles.find((e, i, a) => e.parent.column != a[0].parent.column);
+    
+    // Next check for gaps between letters
+    
+    // Next check to see if those gaps are populated with existing letters
+    
+    // Next check all those letters (plus previously existing letter) make a valid word
 };

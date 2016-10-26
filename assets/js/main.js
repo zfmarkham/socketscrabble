@@ -15,6 +15,9 @@ function createGrid()
 {
     this.grid = new Grid();
     stage.addChild(this.grid);
+
+    // Testing scaling for other devices
+    // stage.scale.set(this.grid.height / window.innerHeight);
 }
 
 function update()

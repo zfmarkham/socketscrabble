@@ -61,13 +61,13 @@ const _onDisconnectHandler = function (data) {
     console.log("disconnect fired.");
 
     //Leave the room/game instance
-    const roomId = socket.rooms[0];
-    socket.to(roomId).emit("playerLeft", ""); //@TODO user data.
-    socket.leave(roomId);
+    //const roomId = socket.rooms[0];
+    //socket.to(roomId).emit("playerLeft", ""); //@TODO user data.
+    //socket.leave(roomId);
 
     //remove activeSocket.
-    const index = _activeSockets.indexOf(socket);
-    if (index !== -1) _activeSockets.splice(index, 1);
+    // const index = _activeSockets.indexOf(socket);
+    // if (index !== -1) _activeSockets.splice(index, 1);
 };
 
 /**
@@ -83,7 +83,7 @@ const _onNewGameHandler = function () {
     //Socket on client side should have a reference to its new room id.
     socket.broadcast.emit("newGame");
 
-}
+};;
 
 /**
  * @Placeholder (?)
