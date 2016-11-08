@@ -18,7 +18,7 @@ server.listen(port, function() {
     console.log(`Server is listening on port: ${port}`);
 });
 
-let routes = require('./routes/index.js')(io);
+let routes = require('./webapp/routes/index.js')(io);
 app.use('/', routes);
 
 // This sets up the location of the static files to serve

@@ -7,12 +7,18 @@ module.exports = function(io) {
     const router = express.Router();
     const path = require('path');
 
-    const gameController = require("../webapp/controllers/GameController");
+    const gameController = require("../../webapp/controllers/GameController");
 
     router.get('/', function (req, res) {
         gameController.init(io);
-        res.sendfile(path.resolve(__dirname + '/../index.html'));
+        res.sendfile(path.resolve(__dirname + '/../../index.html'));
     });
+
+    router.post('/createGame', function(req, res) {
+
+    });
+
+
 
     return router;
 };
