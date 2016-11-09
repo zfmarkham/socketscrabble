@@ -12,8 +12,12 @@ const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
-const routes = require('./routes/index')(io);
 
+// Setup template render engine
+app.set('views', './views/');
+app.set('view engine', 'pug');
+
+// Set app to use bodyParser, this adds a body property to the request param in route callbacks.
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -26,16 +30,21 @@ app.use(require('express-session')({                        //
 app.use(passport.initialize());                             //
 app.use(passport.session());                                //
 
+// Using the flash middleware provided by connect-flash to store messages in session and displaying in templates
+// This basically adds a .flash property to requests in routes. This is used in passport to flash a message when authenticating
+var flash = require('connect-flash');
+app.use(flash());
+
+// Initialize Passport
+var initPassport = require('./passport/init');
+initPassport(passport);
+
+const routes = require('./routes/index')(io, passport);
 app.use('/', routes);
 
 // This sets up the location of the static files to serve
 app.use(express.static('.'));
 
-// passport config
-var Account = require('./models/account').Account;
-passport.use(new LocalStrategy(Account.authenticate()));
-passport.serializeUser(Account.serializeUser());
-passport.deserializeUser(Account.deserializeUser());
 
 mongoose.connect('mongodb://localhost/passport_local_mongoose_express4');
 

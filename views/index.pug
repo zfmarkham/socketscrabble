@@ -1,0 +1,12 @@
+//
+   Created by zmark_000 on 09/11/2016.
+
+div
+    h1 Login
+    form(class='form-signin', action='/login', method='POST')
+        input(type='text', name='username', class='form-control', placeholder='Username',required, autofocus)
+        input(type='password', name='password', class='form-control nomargin', placeholder='Password', required)
+        button(class='btn btn-lg btn-primary btn-block', type='submit') Login
+    #message
+        if message
+            h1 #{message}

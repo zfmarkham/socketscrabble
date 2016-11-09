@@ -2,9 +2,18 @@
  * Created by zmark_000 on 22/10/2016.
  */
 
-module.exports = function(io) {
+const isAuthenticated = function (req, res, next) {
+    // if user is authenticated in the session, call the next() to call the next request handler
+    // Passport adds this method to request object. A middleware is allowed to add properties to
+    // request and response objects
+    if (req.isAuthenticated())
+        return next();
+    // if the user is not authenticated then redirect them to the login page
+    res.redirect('/');
+};
+
+module.exports = function(io, passport) {
     const express = require('express');
-    const passport = require('passport');
     const Account = require('../models/account').Account;
     const Game = require('../models/game').Game;
     const router = express.Router();
@@ -13,8 +22,29 @@ module.exports = function(io) {
     const gameController = require("../webapp/controllers/GameController");
 
     router.get('/', (req, res) => {
-        gameController.init(io);
-        res.sendfile(path.resolve(__dirname + '/../index.html'));
+        //gameController.init(io);
+        //res.sendfile(path.resolve(__dirname + '/../index.html'));
+        res.render('index', {message: req.flash('message')});
+    });
+
+    router.post('/login', passport.authenticate('login', {
+        successRedirect: '/home',
+        failureRedirect: '/',
+        failureFlash: true
+    }));
+
+    router.get('/register', (req, res) => {
+        res.render('register', {message: req.flash('message')});
+    });
+
+    router.post('/register', passport.authenticate('register', {
+        successRedirect: '/home',
+        failureRedirect: '/register',
+        failureFlash: true
+    }));
+
+    router.get('/home', isAuthenticated, (req, res) => {
+        res.render('home', {activeGames: req.user.activeGames});
     });
 
     router.post('/createGame', (req, res) => {
@@ -55,19 +85,6 @@ module.exports = function(io) {
 
         // Send something so request doesn't lock up
         res.send('test');
-    });
-
-    router.post('/register', (req, res) => {
-        Account.register(new Account({username: req.body.username}), req.body.password, (err, account) => {
-            if (err) {
-                return res.send(err);
-            }
-
-            passport.authenticate('local')(req, res, () => {
-                // res.redirect('/');
-                res.send('Account registered successfully');
-            })
-        })
     });
 
     router.get('/login', (req, res) => {
