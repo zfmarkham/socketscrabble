@@ -24,12 +24,24 @@ module.exports = function(io) {
 
             if (!err)
             {
-                Game.create({players: [users[0]._id, users[1]._id]}, (err, game) => {
+                var playerInfo = [];
+                
+                for (let i = 0; i < 2; i++)
+                {
+                    playerInfo.push({
+                        playerId: users[i]._id,
+                        score: 0,
+                        turnActive: false
+                    })
+                }
+                
+                Game.create({players: playerInfo}, (err, game) => {
 
                     // This should probably be done using model.Update and have a promise attached to it to know all players have been updated successfully
+                    // Or look into using the mongoose update function which can take various params to query by ID and specify pushing to array 
                     for (let i = 0; i < game.players.length; i++)
                     {
-                        Account.findById(game.players[i], (err, player) => {
+                        Account.findById(game.players[i].playerId, (err, player) => {
                             player.activeGames.push(game._id);
                             player.save((err, player, numAffected) =>
                             {
