@@ -14,6 +14,7 @@ const isAuthenticated = function (req, res, next) {
 
 module.exports = function(io, passport) {
     const express = require('express');
+    const mongoose = require('mongoose');
     const Account = require('../models/account').Account;
     const Game = require('../models/game').Game;
     const router = express.Router();
@@ -22,8 +23,7 @@ module.exports = function(io, passport) {
     const gameController = require("../webapp/controllers/GameController");
 
     router.get('/', (req, res) => {
-        //gameController.init(io);
-        //res.sendfile(path.resolve(__dirname + '/../index.html'));
+        console.log('test');
         res.render('index', {message: req.flash('message')});
     });
 
@@ -100,8 +100,30 @@ module.exports = function(io, passport) {
         res.redirect('/');
     });
 
-    router.get('/ping', (req, res) => {
-        res.status(200).send("pong!");
+    router.param('id', (req, res, next, id) => {
+
+        // Check game exists in users active games
+        if (req.user && req.user.activeGames.map(e=>e.toString()).includes(id))
+        {
+            req.id = id;
+        }
+
+        next();
+    });
+
+    router.get('/game/:id', isAuthenticated, (req, res) => {
+
+        if (req.id)
+        {
+            var game = Game.findOne({_id: req.id}, (err, obj) => {
+                req.session.game = obj;
+                res.render('game', {data: obj});
+            });
+        }
+        else
+        {
+            // Id not valid, do something
+        }
     });
 
     return router;

@@ -83,8 +83,6 @@ Grid.SPECIAL_SQUARE_COORDS = [
 
 ];
 
-const socket = io.connect('http://zfmarkham.servehttp.com:3000');
-
 function Grid()
 {
     PIXI.Container.call(this);
@@ -104,8 +102,8 @@ function Grid()
     this.rack = this.addChild(new Rack());
 
     this.interactive = true;
-    this.mousedown = this.touchstart = this.onMouseDown;
-    this.mouseup = this.touchend = this.onMouseRelease;
+    this.mousedown = this.touchstart = this.onMouseDown.bind(this);
+    this.mouseup = this.touchend = this.onMouseRelease.bind(this);
 
     this.submitWordBtn = this.addChild(new PIXI.Container());
     this.submitWordBtn.setTransform(this.rack.x + this.rack.width + 10, this.rack.y + (this.rack.height / 2));
@@ -120,13 +118,43 @@ function Grid()
     this.submitWordBtn.on("click", this.onSubmitWordPressed.bind(this));
     this.submitWordBtn.on("tap", this.onSubmitWordPressed.bind(this));
 
-    socket.on('letterPlaced', function(data){
+    this.socket = io('http://zfmarkham.servehttp.com:3000');
+    // this.socket = io('http://localhost:3000');
+
+    this.socket.on('connect', () => {
+        this.socket.emit('getGameInfo');
+    });
+
+    this.socket.on('getGameInfo', function(data) {
+        this.gameData = data;
+        this.loadBoardState(data);
+    }.bind(this));
+
+    this.socket.on('letterPlaced', function(data){
         let tile = new Tile(data.letter);
         this.gridSquares.find(el=>el.id == data.gridSquareId).addChild(tile);
     }.bind(this));
 
     this.placedTiles = [];
 }
+
+Grid.prototype.loadBoardState = function(data)
+{
+    this.setupExistingTiles(data.tilesPlaced);
+};
+
+Grid.prototype.setupExistingTiles = function(tileData)
+{
+    var rows    = tileData.split(";").map(e=>e.split(',')[0]);
+    var columns = tileData.split(";").map(e=>e.split(',')[1]);
+    var letters = tileData.split(";").map(e=>e.split(',')[2]);
+
+    for (var i = 0; i < letters.length; i++)
+    {
+        let tile = new Tile(letters[i]);
+        this.gridSquares.find(el=>el.row == rows[i] && el.column == columns[i]).addChild(tile);
+    }
+};
 
 Grid.prototype.createGridSquares = function()
 {
@@ -168,7 +196,7 @@ Grid.prototype.onMouseRelease = function(mousedata)
             {
                 // Attach Tile to grid square
                 tile.setParent(gridSquare);
-                socket.emit('letterPlaced', {letter: tile.letter, globalPos: tile.toGlobal(tile.position), gridSquareId: gridSquare.id});
+                this.socket.emit('letterPlaced', {letter: tile.letter, globalPos: tile.toGlobal(tile.position), gridSquareId: gridSquare.id});
                 this.placedTiles.push(tile);
             }
         }

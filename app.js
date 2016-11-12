@@ -12,6 +12,18 @@ const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
+const config = require("./webapp/config.json");
+const port = config && config.defaultPort || 3000;
+
+// TODO instead of using config.json use an environment variable
+
+/**
+ * Starts server listening on port.
+ * @param {number} port - from config.json or default value.
+ */
+server.listen(port, function() {
+    console.log(`Server is listening on port: ${port}`);
+});
 
 // Setup template render engine
 app.set('views', './views/');
@@ -21,14 +33,37 @@ app.set('view engine', 'pug');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
+var expressSession = require('express-session');
+var sessionMiddleware = expressSession({
+    name: 'insert_name_here_probs',
+    secret: 'keyboard cat',
+    // resave: false,
+    // saveUninitialized: false
+    store: new (require("connect-mongo")(expressSession))({
+        url: "mongodb://localhost/sessionStore"
+    })
+});
 
-app.use(require('express-session')({                        //
-    secret: 'keyboard cat', // What's this for??            //
-    resave: false,                                          //  Order of this is important.
-    saveUninitialized: false                                //  If the app.use('/', routes) is before the passport stuff
-}));                                                        //  then passport throws an error saying passport.initialize isn't used
-app.use(passport.initialize());                             //
-app.use(passport.session());                                //
+app.use(sessionMiddleware);
+app.use(passport.initialize());
+app.use(passport.session());
+
+io.use(function(socket, next){
+    sessionMiddleware(socket.request, {}, next);
+});
+
+const Game = require('./models/game').Game;
+io.on('connection', function (socket) {
+
+    socket.on('getGameInfo', ()=> {
+        socket.emit('getGameInfo', socket.request.session.game);
+    });
+
+    socket.on('letterPlaced', (data) => {
+        socket.broadcast.emit('letterPlaced', data);
+    })
+});
+
 
 // Using the flash middleware provided by connect-flash to store messages in session and displaying in templates
 // This basically adds a .flash property to requests in routes. This is used in passport to flash a message when authenticating
@@ -45,16 +80,4 @@ app.use('/', routes);
 // This sets up the location of the static files to serve
 app.use(express.static('.'));
 
-
 mongoose.connect('mongodb://localhost/passport_local_mongoose_express4');
-
-const config = require("./webapp/config.json");
-const port = config && config.defaultPort || 3000;
-
-/**
- * Starts server listening on port.
- * @param {number} port - from config.json or default value.
- */
-server.listen(port, function() {
-    console.log(`Server is listening on port: ${port}`);
-});
