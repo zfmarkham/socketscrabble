@@ -23,7 +23,6 @@ module.exports = function(io, passport) {
     const gameController = require("../webapp/controllers/GameController");
 
     router.get('/', (req, res) => {
-        console.log('test');
         res.render('index', {message: req.flash('message')});
     });
 
@@ -44,7 +43,7 @@ module.exports = function(io, passport) {
     }));
 
     router.get('/home', isAuthenticated, (req, res) => {
-        res.render('home', {activeGames: req.user.activeGames});
+        res.render('home', {username: req.user.username, activeGames: req.user.activeGames});
     });
 
     router.post('/createGame', (req, res) => {

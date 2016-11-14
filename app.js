@@ -37,10 +37,11 @@ var expressSession = require('express-session');
 var sessionMiddleware = expressSession({
     name: 'insert_name_here_probs',
     secret: 'keyboard cat',
-    // resave: false,
-    // saveUninitialized: false
+    resave: false,
+    saveUninitialized: false,
     store: new (require("connect-mongo")(expressSession))({
-        url: "mongodb://localhost/sessionStore"
+        url: "mongodb://localhost/sessionStore",
+        ttl: 5 * 60 // Session timeout, not sure how long this realistically wants to be, currently 5 minutes
     })
 });
 

@@ -1,8 +1,23 @@
 //
    Created by zmark_000 on 09/11/2016.
 
-div
-    h1 Active Games
-    #games
-        - for (var i = 0; i < activeGames.length; i++)
-            a(href=`game/${activeGames[i]}`) #{activeGames[i]}
+head
+    link(rel ='stylesheet', href='./public/css/style.css')
+body.preload
+    div
+        h1 Active Games
+        #games
+            - for (var i = 0; i < activeGames.length; i++)
+                div
+                    a(href=`game/${activeGames[i]}`) #{activeGames[i]}
+            a(href='#openModal') Create Game
+        div#openModal.modalDialog
+            div
+                a(href='#close' title='Close' class='close') X
+                h2 Modal Box
+        .profile #{username}
+            #logout
+                a(href='/logout') Log Out
+
+    script.
+        window.onload = function(){document.getElementsByTagName("body")[0].classList.remove("preload")}
