@@ -13,7 +13,7 @@ const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
 const config = require("./webapp/config.json");
-const port = config && config.defaultPort || 3000;
+const port = process.env.PORT || 3000;
 
 // TODO instead of using config.json use an environment variable
 
