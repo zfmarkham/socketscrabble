@@ -33,14 +33,28 @@ app.set('view engine', 'pug');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-var expressSession = require('express-session');
-var sessionMiddleware = expressSession({
+let options = { server: { socketOptions: { keepAlive: 300000, connectTimeoutMS: 30000 } },
+    replset: { socketOptions: { keepAlive: 300000, connectTimeoutMS: 30000 } } };
+
+let mongoUri = process.env.MONGODB_URI;
+console.log('MongoUri: ', mongoUri);
+mongoose.connect(mongoUri, options);
+let conn = mongoose.connection;
+
+conn.on('error', console.error.bind(console, 'connection error'));
+
+conn.once('open', function() {
+
+});
+
+let expressSession = require('express-session');
+let sessionMiddleware = expressSession({
     name: 'insert_name_here_probs',
     secret: 'keyboard cat',
     resave: false,
     saveUninitialized: false,
     store: new (require("connect-mongo")(expressSession))({
-        url: "mongodb://localhost/sessionStore",
+        mongooseConnection: conn,
         ttl: 5 * 60 // Session timeout, not sure how long this realistically wants to be, currently 5 minutes
     })
 });
@@ -53,7 +67,6 @@ io.use(function(socket, next){
     sessionMiddleware(socket.request, {}, next);
 });
 
-const Game = require('./models/game').Game;
 io.on('connection', function (socket) {
 
     socket.on('getGameInfo', ()=> {
@@ -68,11 +81,11 @@ io.on('connection', function (socket) {
 
 // Using the flash middleware provided by connect-flash to store messages in session and displaying in templates
 // This basically adds a .flash property to requests in routes. This is used in passport to flash a message when authenticating
-var flash = require('connect-flash');
+let flash = require('connect-flash');
 app.use(flash());
 
 // Initialize Passport
-var initPassport = require('./passport/init');
+let initPassport = require('./passport/init');
 initPassport(passport);
 
 const routes = require('./routes/index')(io, passport);
@@ -80,16 +93,3 @@ app.use('/', routes);
 
 // This sets up the location of the static files to serve
 app.use(express.static('.'));
-
-var options = { server: { socketOptions: { keepAlive: 300000, connectTimeoutMS: 30000 } },
-                replset: { socketOptions: { keepAlive: 300000, connectTimeoutMS: 30000 } } };
-
-var mongoUri = process.env.MONGODB_URI;
-mongoose.connect(mongoUri, options);
-var conn = mongoose.connection;
-
-conn.on('error', console.error.bind(console, 'connection error'));
-
-conn.once('open', function() {
-
-});
