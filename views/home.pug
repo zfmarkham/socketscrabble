@@ -14,10 +14,42 @@ body.preload
         div#openModal.modalDialog
             div
                 a(href='#close' title='Close' class='close') X
-                h2 Modal Box
+                h2 Search Player
+                form(id="playerSearchForm" action="/createGame" method="post")
+                    input(type='text' placeholder='Username' id='usernameInput' name='username' required)
+                    input(type='submit' value='Search')
         .profile #{username}
             #logout
                 a(href='/logout') Log Out
 
     script.
-        window.onload = function(){document.getElementsByTagName("body")[0].classList.remove("preload")}
+        window.onload = function(){document.getElementsByTagName("body")[0].classList.remove("preload")};
+
+        document.getElementById('playerSearchForm').onsubmit = function(_event)
+        {
+            _event.preventDefault();
+
+            var XHR = new XMLHttpRequest();
+            XHR.addEventListener('load', function(event)
+            {
+                var res = JSON.parse(event.currentTarget.response);
+
+                if (res.playerFound)
+                {
+                    alert("Player Found - Game Created");
+                }
+                else
+                {
+                    alert("No player with that username found");
+                }
+            });
+
+            XHR.addEventListener('error', function(event)
+            {
+                alert('fail')
+            });
+
+            XHR.open('POST', '/createGame');
+            XHR.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            XHR.send('username='+document.getElementById("usernameInput").value);
+        }

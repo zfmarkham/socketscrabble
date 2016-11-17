@@ -48,21 +48,28 @@ module.exports = function(io, passport) {
 
     router.post('/createGame', (req, res) => {
 
-        // Calling .lean here stops the query from returning model objects, returns them as plain objects instead
-        var players = Account.find({}).lean().exec((err, users) => {
+        let response = {playerFound: false};
 
-            if (!err)
+        // Calling .lean here stops the query from returning model objects, returns them as plain objects instead
+        var players = Account.findOne({username: req.body.username}).lean().exec((err, user) => {
+
+            if (err)
             {
-                var playerInfo = [];
-                
-                for (let i = 0; i < 2; i++)
-                {
-                    playerInfo.push({
-                        playerId: users[i]._id,
-                        score: 0,
-                        turnActive: false
-                    })
-                }
+                response.err = err;
+            }
+            else if (user)
+            {
+                response.playerFound = true;
+
+                var playerInfo = [{
+                    playerId: req.user._id,
+                    score: 0,
+                    turnActive: false
+                },{
+                    playerId: user._id,
+                    score: 0,
+                    turnActive: false
+                }];
                 
                 Game.create({players: playerInfo}, (err, game) => {
 
@@ -80,10 +87,9 @@ module.exports = function(io, passport) {
                     }
                 });
             }
-        });
 
-        // Send something so request doesn't lock up
-        res.send('test');
+            res.send(response);
+        });
     });
 
     router.get('/login', (req, res) => {
