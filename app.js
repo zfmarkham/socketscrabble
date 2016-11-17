@@ -81,4 +81,15 @@ app.use('/', routes);
 // This sets up the location of the static files to serve
 app.use(express.static('.'));
 
-mongoose.connect('mongodb://localhost/passport_local_mongoose_express4');
+var options = { server: { socketOptions: { keepAlive: 300000, connectTimeoutMS: 30000 } },
+                replset: { socketOptions: { keepAlive: 300000, connectTimeoutMS: 30000 } } };
+
+var mongoUri = process.env.MONGODB_URI;
+mongoose.connect(mongoUri, options);
+var conn = mongoose.connection;
+
+conn.on('error', console.error.bind(console, 'connection error'));
+
+conn.once('open', function() {
+
+});
