@@ -4,7 +4,8 @@
   "description": "socketscrabble clientside",
   "main": "app.js",
   "scripts": {
-    "test": "devtool app.js"
+    "test": "devtool app.js",
+    "start": "node app.js"
   },
   "repository": {
     "type": "git",
