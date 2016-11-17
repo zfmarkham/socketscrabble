@@ -2,6 +2,8 @@
  * Created by zmark_000 on 22/10/2016.
  */
 
+"use strict";
+
 const isAuthenticated = function (req, res, next) {
     // if user is authenticated in the session, call the next() to call the next request handler
     // Passport adds this method to request object. A middleware is allowed to add properties to
