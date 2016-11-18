@@ -2,6 +2,9 @@
   "name": "socketscrabble",
   "version": "1.0.0",
   "description": "socketscrabble clientside",
+  "engines": {
+    "node": "6.7.0"
+  },
   "main": "app.js",
   "scripts": {
     "test": "devtool app.js",
