@@ -12,10 +12,7 @@ const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
 
-const config = require("./webapp/config.json");
 const port = process.env.PORT || 3000;
-
-// TODO instead of using config.json use an environment variable
 
 /**
  * Starts server listening on port.
@@ -36,7 +33,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 let options = { server: { socketOptions: { keepAlive: 300000, connectTimeoutMS: 30000 } },
     replset: { socketOptions: { keepAlive: 300000, connectTimeoutMS: 30000 } } };
 
-let mongoUri = process.env.MONGODB_URI;
+let mongoUri = process.env.MONGODB_URI || 'mongodb://localhost/passport_local_mongoose_express4';
 console.log('MongoUri: ', mongoUri);
 mongoose.connect(mongoUri, options);
 let conn = mongoose.connection;
@@ -63,21 +60,7 @@ app.use(sessionMiddleware);
 app.use(passport.initialize());
 app.use(passport.session());
 
-io.use(function(socket, next){
-    sessionMiddleware(socket.request, {}, next);
-});
-
-io.on('connection', function (socket) {
-
-    socket.on('getGameInfo', ()=> {
-        socket.emit('getGameInfo', socket.request.session.game);
-    });
-
-    socket.on('letterPlaced', (data) => {
-        socket.broadcast.emit('letterPlaced', data);
-    })
-});
-
+let socketHandler = require('./webapp/socket-handler')(io, sessionMiddleware);
 
 // Using the flash middleware provided by connect-flash to store messages in session and displaying in templates
 // This basically adds a .flash property to requests in routes. This is used in passport to flash a message when authenticating

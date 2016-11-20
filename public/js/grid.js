@@ -118,16 +118,19 @@ function Grid()
     this.submitWordBtn.on("click", this.onSubmitWordPressed.bind(this));
     this.submitWordBtn.on("tap", this.onSubmitWordPressed.bind(this));
 
-    this.socket = io('http://zfmarkham.servehttp.com:3000');
-    // this.socket = io('http://localhost:3000');
+    // this.socket = io('http://zfmarkham.servehttp.com:3000');
+    this.socket = io('http://localhost:3000');
 
     this.socket.on('connect', () => {
         this.socket.emit('getGameInfo');
     });
 
     this.socket.on('getGameInfo', function(data) {
-        this.gameData = data;
-        this.loadBoardState(data);
+        if (data)
+        {
+            this.gameData = data;
+            this.loadBoardState(data);
+        }
     }.bind(this));
 
     this.socket.on('letterPlaced', function(data){
@@ -140,14 +143,17 @@ function Grid()
 
 Grid.prototype.loadBoardState = function(data)
 {
-    this.setupExistingTiles(data.tilesPlaced);
+    if (data.tilesPlaced != "")
+    {
+        this.setupExistingTiles(data.tilesPlaced);
+    }
 };
 
 Grid.prototype.setupExistingTiles = function(tileData)
 {
-    var rows    = tileData.split(";").map(e=>e.split(',')[0]);
-    var columns = tileData.split(";").map(e=>e.split(',')[1]);
-    var letters = tileData.split(";").map(e=>e.split(',')[2]);
+    var rows    = tileData.split(";").map(e=>e.split('')[0]);
+    var columns = tileData.split(";").map(e=>e.split('')[1]);
+    var letters = tileData.split(";").map(e=>e.split('')[2]);
 
     for (var i = 0; i < letters.length; i++)
     {
@@ -240,121 +246,21 @@ Grid.prototype.onSubmitWordPressed = function(mousedata)
     {
         console.warn('Tiles all placed on same row/column');
 
+        let word;
+
         if (tilesOnSameRow)
         {
-            this.placedTiles.sort(function(a, b){return a.parent.column - b.parent.column});
-            console.log(this.placedTiles.map(e=>e.letter));
-
-            let startCol = this.placedTiles[0].parent.column;
-            let endCol = this.placedTiles[this.placedTiles.length - 1].parent.column;
-            let row = this.placedTiles[0].parent.row;
-            let column;
-            let connectedTiles = [];
-
-            if (startCol > 0)
-            {
-                column = startCol - 1;
-
-                while (column >= 0)
-                {
-                    let gridSquare = this.gridSquares.find(e=>(e.row == row && e.column == column));
-                    if (gridSquare && gridSquare.children.length > 1)
-                    {
-                        connectedTiles.push(gridSquare.getChildAt(1));
-                        column--;
-                    }
-                    else
-                    {
-                        column = -1;
-                    }
-                }
-            }
-
-            if (endCol < Grid.GRID_COLUMNS)
-            {
-                column = endCol + 1;
-
-                while (column <= Grid.GRID_COLUMNS)
-                {
-                    let gridSquare = this.gridSquares.find(e=>(e.row == row && e.column == column));
-                    if (gridSquare && gridSquare.children.length > 1)
-                    {
-                        connectedTiles.push(gridSquare.getChildAt(1));
-                        column++;
-                    }
-                    else
-                    {
-                        column = Grid.GRID_COLUMNS + 1;
-                    }
-                }
-            }
-
-            let allTiles = this.placedTiles.concat(connectedTiles);
-            allTiles.sort(function(a, b){return a.parent.column - b.parent.column});
-
-            let cols = allTiles.map(e=>e.parent.column);
-            let word = allTiles.reduce((p, c)=>p+c.letter, "");
-            console.log(`Row: ${row}, Columns: ${cols}`);
-            console.log(`Word from all tiles: ${word}`);
+            word = this.checkHorizontalWord();
         }
 
         if (tilesOnSameCol)
         {
-            this.placedTiles.sort(function(a, b){return a.parent.row - b.parent.row});
-            console.log(this.placedTiles.map(e=>e.letter));
-
-            let startRow = this.placedTiles[0].parent.row;
-            let endRow = this.placedTiles[this.placedTiles.length - 1].parent.row;
-            let column = this.placedTiles[0].parent.column;
-            let row;
-            let connectedTiles = [];
-
-            if (startRow > 0)
-            {
-                row = startRow - 1;
-
-                while (row >= 0)
-                {
-                    var gridSquare = this.gridSquares.find(e=>(e.row == row && e.column == column));
-                    if (gridSquare && gridSquare.children.length > 1)
-                    {
-                        connectedTiles.push(gridSquare.getChildAt(1));
-                        row--;
-                    }
-                    else
-                    {
-                        row = -1;
-                    }
-                }
-            }
-            
-            if (endRow < Grid.GRID_ROWS)
-            {
-                row = endRow + 1;
-
-                while (row <= Grid.GRID_ROWS)
-                {
-                    let gridSquare = this.gridSquares.find(e=>(e.row == row && e.column == column));
-                    if (gridSquare && gridSquare.children.length > 1)
-                    {
-                        connectedTiles.push(gridSquare.getChildAt(1));
-                        row++;
-                    }
-                    else
-                    {
-                        row = Grid.GRID_ROWS + 1;
-                    }
-                }
-            }
-
-            let allTiles = this.placedTiles.concat(connectedTiles);
-            allTiles.sort(function(a, b){return a.parent.row - b.parent.row});
-
-            let rows = allTiles.map(e=>e.parent.row);
-            let word = allTiles.reduce((p, c)=>p+c.letter, "");
-            console.log(`Column: ${column}, Rows: ${rows}`);
-            console.log(`Word from all tiles: ${word}`);
+            word = this.checkVerticalWord();
         }
+
+        let tileString = this.placedTiles.reduce((pre, curr) => {return pre + curr.parent.row + curr.parent.column + curr.letter + ';'}, '');
+        tileString = tileString.slice(0, -1); // Remove trailing semi colon
+        this.socket.emit('submitWord', {word: word, placedTiles: tileString});
     }
     else
     {
@@ -370,4 +276,124 @@ Grid.prototype.onSubmitWordPressed = function(mousedata)
     // Next check all those letters (plus previously existing letter) make a valid word
 
     // Probably need special check if only 1 tile is placed
+};
+
+Grid.prototype.checkHorizontalWord = function()
+{
+    this.placedTiles.sort(function(a, b){return a.parent.column - b.parent.column});
+    console.log(this.placedTiles.map(e=>e.letter));
+
+    let startCol = this.placedTiles[0].parent.column;
+    let endCol = this.placedTiles[this.placedTiles.length - 1].parent.column;
+    let row = this.placedTiles[0].parent.row;
+    let column;
+    let connectedTiles = [];
+
+    if (startCol > 0)
+    {
+        column = startCol - 1;
+
+        while (column >= 0)
+        {
+            let gridSquare = this.gridSquares.find(e=>(e.row == row && e.column == column));
+            if (gridSquare && gridSquare.children.length > 1)
+            {
+                connectedTiles.push(gridSquare.getChildAt(1));
+                column--;
+            }
+            else
+            {
+                column = -1;
+            }
+        }
+    }
+
+    if (endCol < Grid.GRID_COLUMNS)
+    {
+        column = endCol + 1;
+
+        while (column <= Grid.GRID_COLUMNS)
+        {
+            let gridSquare = this.gridSquares.find(e=>(e.row == row && e.column == column));
+            if (gridSquare && gridSquare.children.length > 1)
+            {
+                connectedTiles.push(gridSquare.getChildAt(1));
+                column++;
+            }
+            else
+            {
+                column = Grid.GRID_COLUMNS + 1;
+            }
+        }
+    }
+
+    let allTiles = this.placedTiles.concat(connectedTiles);
+    allTiles.sort(function(a, b){return a.parent.column - b.parent.column});
+
+    let cols = allTiles.map(e=>e.parent.column);
+    let word = allTiles.reduce((p, c)=>p+c.letter, "");
+    console.log(`Row: ${row}, Columns: ${cols}`);
+    console.log(`Word from all tiles: ${word}`);
+
+    return word
+};
+
+Grid.prototype.checkVerticalWord = function()
+{
+    this.placedTiles.sort(function(a, b){return a.parent.row - b.parent.row});
+    console.log(this.placedTiles.map(e=>e.letter));
+
+    let startRow = this.placedTiles[0].parent.row;
+    let endRow = this.placedTiles[this.placedTiles.length - 1].parent.row;
+    let column = this.placedTiles[0].parent.column;
+    let row;
+    let connectedTiles = [];
+
+    if (startRow > 0)
+    {
+        row = startRow - 1;
+
+        while (row >= 0)
+        {
+            var gridSquare = this.gridSquares.find(e=>(e.row == row && e.column == column));
+            if (gridSquare && gridSquare.children.length > 1)
+            {
+                connectedTiles.push(gridSquare.getChildAt(1));
+                row--;
+            }
+            else
+            {
+                row = -1;
+            }
+        }
+    }
+
+    if (endRow < Grid.GRID_ROWS)
+    {
+        row = endRow + 1;
+
+        while (row <= Grid.GRID_ROWS)
+        {
+            let gridSquare = this.gridSquares.find(e=>(e.row == row && e.column == column));
+            if (gridSquare && gridSquare.children.length > 1)
+            {
+                connectedTiles.push(gridSquare.getChildAt(1));
+                row++;
+            }
+            else
+            {
+                row = Grid.GRID_ROWS + 1;
+            }
+        }
+    }
+
+    let allTiles = this.placedTiles.concat(connectedTiles);
+    allTiles.sort(function(a, b){return a.parent.row - b.parent.row});
+
+    let rows = allTiles.map(e=>e.parent.row);
+    let word = allTiles.reduce((p, c)=>p+c.letter, "");
+    console.log(`Column: ${column}, Rows: ${rows}`);
+    console.log(`Word from all tiles: ${word}`);
+
+    return word
 };

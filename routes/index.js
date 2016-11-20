@@ -53,7 +53,7 @@ module.exports = function(io, passport) {
         let response = {playerFound: false};
 
         // Calling .lean here stops the query from returning model objects, returns them as plain objects instead
-        var players = Account.findOne({username: req.body.username}).lean().exec((err, user) => {
+        Account.findOne({username: req.body.username}).lean().exec((err, user) => {
 
             if (err)
             {
@@ -63,7 +63,7 @@ module.exports = function(io, passport) {
             {
                 response.playerFound = true;
 
-                var playerInfo = [{
+                const playerInfo = [{
                     playerId: req.user._id,
                     score: 0,
                     turnActive: false
@@ -83,7 +83,7 @@ module.exports = function(io, passport) {
                             player.activeGames.push(game._id);
                             player.save((err, player, numAffected) =>
                             {
-                                debugger;
+
                             });
                         });
                     }
@@ -122,7 +122,7 @@ module.exports = function(io, passport) {
 
         if (req.id)
         {
-            var game = Game.findOne({_id: req.id}, (err, obj) => {
+            const game = Game.findOne({_id: req.id}, (err, obj) => {
                 req.session.game = obj;
                 res.render('game', {data: obj});
             });
